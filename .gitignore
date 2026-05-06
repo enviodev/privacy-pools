@@ -1,0 +1,22 @@
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Generated
+node_modules/
+.envio/
+generated/
+.DS_Store
+
+# Logs
+*.log
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+
+# Local test artefacts
+dist/
+build/

@@ -1,0 +1,21 @@
+{
+  "name": "privacy-pools-indexer",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "codegen": "envio codegen",
+    "dev": "envio dev",
+    "start": "envio start",
+    "stop": "envio stop"
+  },
+  "dependencies": {
+    "envio": "3.0.0-rc.0"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

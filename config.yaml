@@ -1,0 +1,113 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: privacy-pools
+description: Privacy Pools multi-chain indexer (Ethereum + Optimism + BSC + Arbitrum)
+
+storage:
+  postgres: true
+  clickhouse: true
+
+field_selection:
+  transaction_fields:
+    - hash
+    - from
+
+contracts:
+  - name: Entrypoint
+    handler: src/EventHandlers.ts
+    events:
+      - event: PoolRegistered(address _pool, address _asset, uint256 _scope)
+      - event: PoolRemoved(address _pool, address _asset, uint256 _scope)
+      - event: PoolConfigurationUpdated(address _pool, address _asset, uint256 _newMinimumDepositAmount, uint256 _newVettingFeeBPS, uint256 _newMaxRelayFeeBPS)
+      - event: PoolWindDown(address _pool)
+      - event: RootUpdated(uint256 _root, string _ipfsCID, uint256 _timestamp)
+      - event: Deposited(address indexed _depositor, address indexed _pool, uint256 _commitment, uint256 _amount)
+      - event: WithdrawalRelayed(address indexed _relayer, address indexed _recipient, address indexed _asset, uint256 _amount, uint256 _feeAmount)
+      - event: FeesWithdrawn(address _asset, address _recipient, uint256 _amount)
+
+  - name: PrivacyPool
+    handler: src/EventHandlers.ts
+    events:
+      - event: Deposited(address indexed _depositor, uint256 _commitment, uint256 _label, uint256 _value, uint256 _precommitmentHash)
+      - event: Withdrawn(address indexed _processooor, uint256 _value, uint256 _spentNullifier, uint256 _newCommitment)
+      - event: Ragequit(address indexed _ragequitter, uint256 _commitment, uint256 _label, uint256 _value)
+      - event: LeafInserted(uint256 _index, uint256 _leaf, uint256 _root)
+      - event: PoolDied()
+
+  # Thin Uniswap V4 price source on BSC. We only need the *current*
+  # price per token, so we don't backfill history — the per-contract
+  # start_block below kicks in well after the V4 deploy. Pool metadata
+  # is hard-coded in src/v4PoolMeta.ts (snapshot of discovered pools)
+  # so we don't even need an Initialize handler.
+  - name: UniswapV4PoolManager
+    handler: src/EventHandlers.ts
+    events:
+      - event: Swap(bytes32 indexed id, address indexed sender, int128 amount0, int128 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick, uint24 fee)
+
+chains:
+  # Ethereum
+  - id: 1
+    start_block: 22153713
+    contracts:
+      - name: Entrypoint
+        address:
+          - 0x6818809eefce719e480a7526d76bd3e561526b46
+      - name: PrivacyPool
+        address:
+          - 0xf241d57c6debae225c0f2e6ea1529373c9a9c9fb  # ETH
+          - 0x05e4dbd71b56861eed2aaa12d00a797f04b5d3c0  # USDS
+          - 0xbbda2173cdfea1c3bd7f2908798f1265301d750c  # sUSDS
+          - 0x1c31c03b8cb2ee674d0f11de77135536db828257  # DAI
+          - 0xb419c2867ab3cbc78921660cb95150d95a94ce86  # USDC
+          - 0xe859c0bd25f260baee534fb52e307d3b64d24572  # USDT
+          - 0xf973f4b180a568157cd7a0e6006449139e6bfc32  # WBTC
+          - 0x1a604e9dfa0efdc7ffda378af16cb81243b61633  # wstETH
+          - 0xc6c769fac7aabeadd31a03fae5ca0ec5b4c50f84  # frxUSD
+          - 0xe6d36b33b00a7c0cb0c2a8d39d07e7db0c526abc  # USDe
+          - 0xc0a8bc0f4f982b4d4f1ffae8f4fccb58c9b29c98  # USD1
+          - 0x7d2959bcfb936a84531518e8391ddba844e03ebe  # wOETH
+          - 0xd14f4b36e1d1d98c218db782c49149876042bc56  # fxUSD
+          - 0xb4b5fd38fd4788071d7287e3cb52948e0d10b23e  # BOLD
+
+  # Optimism
+  - id: 10
+    start_block: 144288142
+    contracts:
+      - name: Entrypoint
+        address:
+          - 0x44192215fed782896be2ce24e0bfbf0bf825d15e
+      - name: PrivacyPool
+        address:
+          - 0x4626a182030d9e98b13f690fff3c443191a918ff  # ETH
+          - 0xe4410f6827fa04ce096975d07a9924abb65316e3  # USDC
+
+  # BNB Smart Chain
+  - id: 56
+    start_block: 69568985    # Privacy Pools deploy block
+    contracts:
+      - name: Entrypoint
+        address:
+          - 0x44192215fed782896be2ce24e0bfbf0bf825d15e
+      - name: PrivacyPool
+        address:
+          - 0x4626a182030d9e98b13f690fff3c443191a918ff  # BNB
+          - 0x2ad9802dc8b9b4022aded1c6c8a7261970d84855  # USDT (BEP-20)
+      - name: UniswapV4PoolManager
+        # Pricing only — start near head so we get current prices
+        # without backfilling all of BSC V4 history. Update
+        # periodically if you want a longer rolling window.
+        start_block: 96500000
+        address:
+          - 0x28e2ea090877bf75740558f6bfb36a5ffee9e9df
+
+  # Arbitrum
+  - id: 42161
+    start_block: 404391809
+    contracts:
+      - name: Entrypoint
+        address:
+          - 0x44192215fed782896be2ce24e0bfbf0bf825d15e
+      - name: PrivacyPool
+        address:
+          - 0x4626a182030d9e98b13f690fff3c443191a918ff  # ETH
+          - 0xa63e0bdc3a193d1e6e7c9be72cb502be4b7fc244  # yUSND
+          - 0x3706e38af05bf0158bcdbb46239f8289980b093f  # USDC

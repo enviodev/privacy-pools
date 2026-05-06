@@ -1,0 +1,163 @@
+type Pool {
+  id: ID!                           # {chainId}_{poolAddress}
+  chainId: Int! @index
+  address: String! @index           # lowercased pool address
+  scope: BigInt!
+  asset: String!                    # lowercased asset address (or NATIVE sentinel)
+  assetSymbol: String!
+  assetDecimals: Int!
+  minimumDepositAmount: BigInt!
+  vettingFeeBPS: BigInt!
+  maxRelayFeeBPS: BigInt!
+  registeredAt: BigInt!
+  registeredBlock: Int!
+  lastUpdatedAt: BigInt!
+  lastUpdatedBlock: Int!
+  windDown: Boolean!
+  poolDied: Boolean!
+  totalDeposits: Int!
+  totalDepositValue: BigInt!
+  totalWithdrawals: Int!
+  totalWithdrawalValue: BigInt!
+  totalRagequits: Int!
+  totalRagequitValue: BigInt!
+  currentLeafCount: Int!
+  currentRoot: BigInt!
+}
+
+type Deposit {
+  id: ID!                           # {chainId}_{txHash}-{logIndex}
+  chainId: Int! @index
+  pool: String! @index              # FK Pool.id ({chainId}_{address})
+  poolAddress: String! @index       # convenience: just the lowercased pool address
+  assetSymbol: String!
+  depositor: String! @index
+  commitment: BigInt!
+  label: BigInt!
+  value: BigInt! @index
+  precommitmentHash: BigInt!
+  entrypointAmount: BigInt
+  entrypointDepositor: String
+  vettingFee: BigInt
+  blockNumber: Int! @index
+  timestamp: BigInt! @index
+  txHash: String! @index
+  txFrom: String
+}
+
+type Withdrawal {
+  id: ID!                           # {chainId}_{txHash}-{logIndex}
+  chainId: Int! @index
+  pool: String! @index              # FK Pool.id
+  poolAddress: String! @index
+  assetSymbol: String!
+  processooor: String! @index
+  withdrawnValue: BigInt! @index
+  spentNullifier: BigInt!
+  newCommitment: BigInt!
+  isRelayed: Boolean!
+  relayer: String
+  recipient: String
+  feeAmount: BigInt
+  blockNumber: Int! @index
+  timestamp: BigInt! @index
+  txHash: String! @index
+}
+
+type Ragequit {
+  id: ID!                           # {chainId}_{txHash}-{logIndex}
+  chainId: Int! @index
+  pool: String! @index
+  poolAddress: String! @index
+  assetSymbol: String!
+  ragequitter: String! @index
+  commitment: BigInt!
+  label: BigInt!
+  value: BigInt!
+  blockNumber: Int! @index
+  timestamp: BigInt! @index
+  txHash: String!
+}
+
+type MerkleLeaf {
+  id: ID!                           # {chainId}_{poolAddress}-{index}
+  chainId: Int! @index
+  pool: String! @index
+  poolAddress: String!
+  index: Int!
+  leaf: BigInt!
+  root: BigInt!
+  blockNumber: Int! @index
+  timestamp: BigInt! @index
+  txHash: String!
+}
+
+type AssociationSetRoot {
+  id: ID!                           # {chainId}_{txHash}-{logIndex}
+  chainId: Int! @index
+  root: BigInt!
+  ipfsCID: String!
+  rootTimestamp: BigInt!
+  blockNumber: Int! @index
+  blockTimestamp: BigInt!
+  txHash: String!
+}
+
+type Account {
+  id: ID!                           # lowercased address (cross-chain rollup)
+  firstSeen: BigInt!
+  firstSeenBlock: Int!
+  firstSeenChain: Int!
+  lastSeen: BigInt!
+  lastSeenBlock: Int!
+  depositCount: Int!
+  withdrawalCount: Int!
+  ragequitCount: Int!
+}
+
+type FeeWithdrawal {
+  id: ID!                           # {chainId}_{txHash}-{logIndex}
+  chainId: Int! @index
+  asset: String!
+  assetSymbol: String!
+  recipient: String!
+  amount: BigInt!
+  timestamp: BigInt!
+  blockNumber: Int! @index
+  txHash: String!
+}
+
+# ---------- Uniswap V4 pricing (thin, head-only) ----------
+#
+# We don't backfill V4 history — the V4 contract has a per-contract
+# start_block near BSC's head and pool metadata is hardcoded in
+# src/v4PoolMeta.ts. Just two entities below: a per-swap observation
+# and the latest-price rollup.
+
+# A single price observation for a token, emitted once per relevant V4 swap.
+type TokenPrice {
+  id: ID!                           # {chainId}_{txHash}-{logIndex}_{token}
+  chainId: Int! @index
+  token: String! @index             # lowercased token address
+  symbol: String! @index
+  priceUsd: BigDecimal! @index      # USD-denominated price at this block
+  refToken: String!                 # the stable / reference token used
+  refSymbol: String!
+  poolId: String! @index            # source V4 pool
+  blockNumber: Int! @index
+  timestamp: BigInt! @index
+  txHash: String!
+}
+
+# Latest price per (chain, token), upserted on every TokenPrice write.
+type LatestPrice {
+  id: ID!                           # {chainId}_{token}
+  chainId: Int! @index
+  token: String! @index
+  symbol: String! @index
+  priceUsd: BigDecimal! @index
+  blockNumber: Int!
+  timestamp: BigInt! @index
+  poolId: String!
+  refSymbol: String!
+}
