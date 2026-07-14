@@ -3,7 +3,8 @@ name: privacy-pools
 description: Privacy Pools multi-chain indexer (Ethereum + Optimism + BSC + Arbitrum)
 
 storage:
-  postgres: true
+  postgres:
+    default: true
   clickhouse: true
 
 field_selection:

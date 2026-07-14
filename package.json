@@ -13,7 +13,7 @@
     "stop": "envio stop"
   },
   "dependencies": {
-    "envio": "3.0.0-rc.0"
+    "envio": "3.2.1"
   },
   "devDependencies": {
     "typescript": "^6.0.3"
