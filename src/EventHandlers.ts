@@ -5,13 +5,12 @@ import { BSC_V4_PRICING_POOL_IDS } from "./v4PoolIds.js";
 import { V4_POOL_META } from "./v4PoolMeta.js";
 
 const lc = (s: string) => s.toLowerCase();
-const poolKey = (chainId: number, address: string) => `${chainId}_${lc(address)}`;
-const eventId = (chainId: number, txHash: string, logIndex: number) =>
+const poolKey = (address: string) => `${chainId}_${lc(address)}`;
+const eventId = (txHash: string, logIndex: number) =>
   `${chainId}_${txHash}-${logIndex}`;
 
 async function getOrInitPool(
   context: any,
-  chainId: number,
   poolAddr: string,
   ts: bigint,
   block: number,
@@ -53,7 +52,6 @@ async function getOrInitPool(
 async function bumpAccount(
   context: any,
   addr: string,
-  chainId: number,
   ts: bigint,
   block: number,
   field: "depositCount" | "withdrawalCount" | "ragequitCount",
@@ -157,7 +155,6 @@ indexer.onEvent({ contract: "Entrypoint", event: "PoolRemoved" }, async ({ event
 indexer.onEvent({ contract: "Entrypoint", event: "RootUpdated" }, async ({ event, context }) => {
   context.AssociationSetRoot.set({
     id: eventId(event.chainId, event.transaction.hash, event.logIndex),
-    chainId: event.chainId,
     root: event.params._root,
     ipfsCID: event.params._ipfsCID,
     rootTimestamp: event.params._timestamp,
@@ -171,7 +168,6 @@ indexer.onEvent({ contract: "Entrypoint", event: "FeesWithdrawn" }, async ({ eve
   const meta = resolveAsset(event.chainId, event.params._asset);
   context.FeeWithdrawal.set({
     id: eventId(event.chainId, event.transaction.hash, event.logIndex),
-    chainId: event.chainId,
     asset: lc(event.params._asset),
     assetSymbol: meta.symbol,
     recipient: lc(event.params._recipient),
@@ -400,7 +396,6 @@ indexer.onEvent(
     const ts = BigInt(event.block.timestamp);
     context.TokenPrice.set({
       id: `${event.chainId}_${event.transaction.hash}-${event.logIndex}_${derived.pricedToken}`,
-      chainId: event.chainId,
       token: derived.pricedToken,
       symbol: derived.pricedSymbol,
       priceUsd: derived.priceUsd,
@@ -414,7 +409,6 @@ indexer.onEvent(
 
     context.LatestPrice.set({
       id: `${event.chainId}_${derived.pricedToken}`,
-      chainId: event.chainId,
       token: derived.pricedToken,
       symbol: derived.pricedSymbol,
       priceUsd: derived.priceUsd,

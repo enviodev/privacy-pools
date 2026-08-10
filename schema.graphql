@@ -1,6 +1,5 @@
 type Pool {
   id: ID!                           # {chainId}_{poolAddress}
-  chainId: Int! @index
   address: String! @index           # lowercased pool address
   scope: BigInt!
   asset: String!                    # lowercased asset address (or NATIVE sentinel)
@@ -27,7 +26,6 @@ type Pool {
 
 type Deposit {
   id: ID!                           # {chainId}_{txHash}-{logIndex}
-  chainId: Int! @index
   pool: String! @index              # FK Pool.id ({chainId}_{address})
   poolAddress: String! @index       # convenience: just the lowercased pool address
   assetSymbol: String!
@@ -47,7 +45,6 @@ type Deposit {
 
 type Withdrawal {
   id: ID!                           # {chainId}_{txHash}-{logIndex}
-  chainId: Int! @index
   pool: String! @index              # FK Pool.id
   poolAddress: String! @index
   assetSymbol: String!
@@ -66,7 +63,6 @@ type Withdrawal {
 
 type Ragequit {
   id: ID!                           # {chainId}_{txHash}-{logIndex}
-  chainId: Int! @index
   pool: String! @index
   poolAddress: String! @index
   assetSymbol: String!
@@ -81,7 +77,6 @@ type Ragequit {
 
 type MerkleLeaf {
   id: ID!                           # {chainId}_{poolAddress}-{index}
-  chainId: Int! @index
   pool: String! @index
   poolAddress: String!
   index: Int!
@@ -94,7 +89,6 @@ type MerkleLeaf {
 
 type AssociationSetRoot {
   id: ID!                           # {chainId}_{txHash}-{logIndex}
-  chainId: Int! @index
   root: BigInt!
   ipfsCID: String!
   rootTimestamp: BigInt!
@@ -117,7 +111,6 @@ type Account {
 
 type FeeWithdrawal {
   id: ID!                           # {chainId}_{txHash}-{logIndex}
-  chainId: Int! @index
   asset: String!
   assetSymbol: String!
   recipient: String!
@@ -137,7 +130,6 @@ type FeeWithdrawal {
 # A single price observation for a token, emitted once per relevant V4 swap.
 type TokenPrice {
   id: ID!                           # {chainId}_{txHash}-{logIndex}_{token}
-  chainId: Int! @index
   token: String! @index             # lowercased token address
   symbol: String! @index
   priceUsd: BigDecimal! @index      # USD-denominated price at this block
@@ -152,7 +144,6 @@ type TokenPrice {
 # Latest price per (chain, token), upserted on every TokenPrice write.
 type LatestPrice {
   id: ID!                           # {chainId}_{token}
-  chainId: Int! @index
   token: String! @index
   symbol: String! @index
   priceUsd: BigDecimal! @index

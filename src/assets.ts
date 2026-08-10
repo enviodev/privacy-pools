@@ -70,13 +70,12 @@ const POOL_TO_ASSET_BY_CHAIN: Record<number, Record<string, string>> = {
   },
 };
 
-export function resolveAsset(chainId: number, addr: string): AssetMeta {
+export function resolveAsset(addr: string): AssetMeta {
   const lc = addr.toLowerCase();
   return ASSETS_BY_CHAIN[chainId]?.[lc] ?? { symbol: "UNKNOWN", decimals: 18 };
 }
 
 export function resolvePoolAsset(
-  chainId: number,
   poolAddr: string,
 ): { asset: string; meta: AssetMeta } {
   const lc = poolAddr.toLowerCase();
